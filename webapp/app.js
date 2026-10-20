@@ -268,7 +268,9 @@
     info: '<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>',
     alert: '<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><path d="M12 9v4M12 17h.01"/>',
     user: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
-    refresh: '<path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5M21 12a9 9 0 0 1-15 6.7L3 16M3 21v-5h5"/>'
+    refresh: '<path d="M3 12a9 9 0 0 1 15-6.7L21 8M21 3v5h-5M21 12a9 9 0 0 1-15 6.7L3 16M3 21v-5h5"/>',
+    external: '<path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>',
+    building: '<path d="M3 21h18"/><path d="M5 21V7l7-4 7 4v14"/><path d="M9 9h1M9 13h1M9 17h1M14 9h1M14 13h1M14 17h1"/>'
   };
   function icon(name) {
     return '<svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" ' +
@@ -462,8 +464,10 @@
         '<div class="meter" aria-hidden="true"><span style="width:' + pct + '%"></span></div>' +
         '<p class="desc">' + esc(r.c.desc) + '</p>' +
         (r.forced ? '<p class="alt-note">1순위와 다른 분야 중에서 가장 가까운 후보예요.</p>' : '') +
-        '<div class="reason"><span class="reason-label">왜 이 방향?</span><p>' + esc(reasonText(r)) + '</p></div></article>';
+        '<div class="reason"><span class="reason-label">왜 이 방향?</span><p>' + esc(reasonText(r)) + '</p></div>' +
+        orgsBlock(r.c) + '</article>';
     });
+    html += '<p class="orgs-note">' + icon("info") + '<span>' + esc(ORGS_NOTE) + '</span></p>';
     if (sc.more.length) {
       html += '<div class="more"><p class="more-title">그 밖에 살펴볼 만한 진로</p><ul>' +
         sc.more.map(function (r) {
@@ -497,6 +501,28 @@
       '<button type="button" class="secondary" data-act="edit">' + icon("edit") + '답변 수정</button>' +
       '<button type="button" data-act="print">' + icon("printer") + '인쇄 / PDF 저장</button></div>';
     app.innerHTML = html;
+  }
+  // 채용 링크: "saramin:검색어"는 사람인 채용공고 검색 결과로 연결
+  function orgLink(o) {
+    var url = o[4], label = o[5] || "채용 페이지";
+    if (url.indexOf("saramin:") === 0) {
+      url = "https://www.saramin.co.kr/zf_user/search/recruit?searchword=" + encodeURIComponent(url.slice(8));
+      label = "사람인 채용공고";
+    }
+    if (!/^https:\/\//.test(url)) return "";
+    return '<a class="org-link" href="' + esc(url) + '" target="_blank" rel="noopener noreferrer">' + esc(label) + icon("external") +
+      '<span class="sr-only"> (새 창)</span></a>';
+  }
+  // 후보별 추천 기업·기관과 지원 자격
+  function orgsBlock(c) {
+    var list = ORGS[c.id];
+    if (!list || !list.length) return "";
+    return '<div class="orgs"><p class="orgs-title">' + icon("building") + '추천 기업·기관과 지원 자격</p><ul>' +
+      list.map(function (o) {
+        return '<li><div class="org-head"><span class="org-size">' + esc(o[1]) + '</span>' +
+          '<span class="org-name">' + esc(o[0]) + '</span><span class="org-kind">' + esc(o[2]) + '</span></div>' +
+          '<p class="org-req"><span class="org-req-label">자격</span>' + esc(o[3]) + '</p>' + orgLink(o) + '</li>';
+      }).join("") + '</ul></div>';
   }
   function section(n, title, desc) {
     return '<section class="card section" id="sec-' + n + '"><h2 class="sec-title"><span class="sec-num">' + n + '</span>' + title + '</h2>' +

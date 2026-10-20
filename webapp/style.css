@@ -362,6 +362,45 @@ td.phrase { color: var(--text-2); }
 .reason-label { display: block; font-size: 0.78rem; font-weight: 800; color: var(--primary); margin-bottom: 2px; }
 .reason p { margin: 0; font-size: 0.92rem; }
 
+/* 추천 기업·기관 */
+.orgs { margin-top: 12px; }
+.orgs-title {
+  display: flex; align-items: center; gap: 6px; margin: 0 0 8px;
+  font-size: 0.8rem; font-weight: 800; color: var(--text-2);
+}
+.orgs-title .ic { color: var(--primary); }
+.orgs ul { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.orgs li {
+  display: flex; flex-direction: column; gap: 6px;
+  padding: 11px 12px; border: 1px solid var(--line); border-radius: var(--radius-sm); background: var(--surface);
+}
+.cand.top .orgs li { border-color: #eadfc4; }
+.org-head { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; }
+.org-size {
+  font-size: 0.68rem; font-weight: 800; padding: 0 6px; border-radius: 3px; margin-bottom: 3px;
+  color: var(--text-2); background: var(--surface-3);
+}
+.org-link {
+  margin-top: auto; align-self: flex-start;
+  display: inline-flex; align-items: center; gap: 5px; min-height: 32px; padding: 0 10px;
+  border: 1px solid var(--line-2); border-radius: var(--radius-sm);
+  font-size: 0.8rem; font-weight: 700; color: var(--primary); text-decoration: none; background: var(--surface);
+}
+.org-link .ic { width: 0.95em; height: 0.95em; }
+.org-link:hover { border-color: var(--primary); background: var(--primary-soft); }
+.org-name { font-weight: 800; font-size: 0.93rem; color: var(--text); }
+.org-kind { font-size: 0.78rem; color: var(--text-3); }
+.org-req { margin: 0; font-size: 0.84rem; color: var(--text-2); line-height: 1.5; }
+.org-req-label {
+  display: inline-block; margin-right: 6px; padding: 0 5px; border-radius: 3px;
+  font-size: 0.72rem; font-weight: 800; color: var(--primary); background: var(--primary-soft); vertical-align: 0.08em;
+}
+.orgs-note {
+  display: flex; gap: 6px; align-items: flex-start; margin: 2px 0 0;
+  font-size: 0.8rem; color: var(--text-3);
+}
+.orgs-note .ic { margin-top: 2px; }
+
 .more { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); }
 .more-title { font-size: 0.9rem; font-weight: 700; margin-bottom: 8px; }
 .more ul { list-style: none; margin: 0; padding: 0; border: 1px solid var(--line); border-radius: var(--radius-sm); }
@@ -445,6 +484,7 @@ ol.qs li::before {
   .doc-band { padding: 20px 18px; }
   .card { padding: 18px; }
   .options { grid-template-columns: 1fr; }
+  .orgs ul { grid-template-columns: 1fr; }
   .step-label { font-size: 0.7rem; }
   .page-title { font-size: 1.3rem; }
   .quiz-nav { margin: 16px -16px 0; padding: 10px 16px calc(10px + env(safe-area-inset-bottom)); }
@@ -487,11 +527,14 @@ ol.qs li::before {
   .doc-head { box-shadow: none; }
   .sec-desc { padding-bottom: 8px; }
   h2, h3, .stage-head { break-after: avoid; }
-  .cand, .stage, tr, .notice, ol.qs li, .tasks li { break-inside: avoid; }
+  .cand, .stage, tr, .notice, ol.qs li, .tasks li, .orgs li { break-inside: avoid; }
+  .cand { break-inside: auto; }
+  .orgs ul { grid-template-columns: repeat(3, 1fr); }
   * { animation: none !important; }
   .doc-head { box-shadow: none; }
   .doc-head, .doc-band, .doc-meta dt, .meter, .meter span, .rank-badge, .sec-num, .stage-head, .stage-no, thead th, tbody th {
     -webkit-print-color-adjust: exact; print-color-adjust: exact;
   }
   a[href^="http"]::after { content: " (" attr(href) ")"; font-size: 0.85em; }
+  .org-link { display: none; }
 }
