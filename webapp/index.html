@@ -2,20 +2,28 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1d3557">
   <title>전역 후 진로 방향 잡기</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%231d3557'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='white' stroke-width='2'/%3E%3Cpolygon points='20.2 11.8 17.9 17.9 11.8 20.2 14.1 14.1' fill='white'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <header class="site-header no-print">
-    <div class="wrap">
-      <span class="brand">전역 후 진로 방향 잡기</span>
-      <span class="sub">면담 전에 혼자 정리해 보는 도구</span>
+    <div class="wrap header-inner">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>
+        </span>
+        전역 후 진로 방향 잡기
+      </div>
+      <span class="header-badge">면담 전 혼자 정리하는 도구</span>
     </div>
   </header>
   <main class="wrap" id="app"></main>
   <footer class="site-footer wrap no-print">
-    입력한 내용은 이 기기의 브라우저에만 저장되고 외부로 전송되지 않아요. 이름·군번·부대 정보는 입력하지 마세요.
+    <svg class="ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    <span>입력한 내용은 이 기기의 브라우저에만 저장되고 외부로 전송되지 않아요. 이름·군번·부대 정보는 입력하지 마세요.</span>
   </footer>
   <script src="data.js"></script>
   <script src="app.js"></script>
