@@ -340,6 +340,17 @@ const QUESTIONS = [
     ] }
 ];
 
+// 문항별 가중치: 본인이 직접 밝힌 방향(관심 분야·가치)은 크게, 보조 조건(지역 등)은 작게
+// 같은 답이 두 후보에 같은 점수를 줘도 다른 문항의 비중 차이로 점수가 갈리도록 함
+const QUESTION_WEIGHTS = {
+  eduLevel: 1, major: 1, post: 1.2, cert: 1, interest: 1.5, strength: 1,
+  value: 1.3, style: 0.8, study: 1.2, biz: 1, region: 0.6
+};
+// 적합 점수 = 가중 점수 + 충족률(그 진로가 받을 수 있는 최대 점수 중 받은 비율) × FIT_COVERAGE
+//           + 지지한 문항 수 × FIT_BREADTH
+const FIT_COVERAGE = 2;
+const FIT_BREADTH = 0.2;
+
 // 답변과 정면으로 어긋나는 후보는 결과에서 아예 뺀다 (점수와 무관)
 // q: 질문 id, values: 해당 답들, candidates: 뺄 후보 id
 const EXCLUDE_RULES = [

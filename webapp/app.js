@@ -121,27 +121,55 @@
       return r.candidates.indexOf(c.id) !== -1 && answered(r.q, r.values);
     });
   }
-  // 점수 → 근거 수 → 가장 강한 근거 → 목록 순서
+  function qWeight(q) { return QUESTION_WEIGHTS[q.id] || 1; }
+  // 후보별로 받을 수 있는 최대 가중 점수 (충족률 계산용, 한 번만 계산)
+  var maxFitCache = null;
+  function maxFit(id) {
+    if (!maxFitCache) {
+      maxFitCache = {};
+      CANDIDATES.forEach(function (c) {
+        var total = 0;
+        QUESTIONS.forEach(function (q) {
+          if (q.type === "text") return;
+          var ws = q.options.map(function (o) { return o.w[c.id] || 0; })
+            .filter(function (w) { return w > 0; }).sort(function (a, b) { return b - a; });
+          var k = q.type === "single" ? 1 : (q.max || ws.length);
+          total += ws.slice(0, k).reduce(function (s, w) { return s + w; }, 0) * qWeight(q);
+        });
+        maxFitCache[c.id] = Math.max(total, 1);
+      });
+    }
+    return maxFitCache[id];
+  }
+  // 적합 점수 → 근거 수 → 가장 강한 근거 → 목록 순서
   function compare(a, b) {
-    return b.score - a.score || b.reasons.length - a.reasons.length || b.peak - a.peak || a.idx - b.idx;
+    return b.fit - a.fit || b.reasons.length - a.reasons.length || b.peak - a.peak || a.idx - b.idx;
   }
   function score() {
     var res = [];
     CANDIDATES.forEach(function (c, i) {
-      if (!excluded(c)) res.push({ c: c, idx: i, score: 0, reasons: [], peak: 0 });
+      if (!excluded(c)) res.push({ c: c, idx: i, raw: 0, reasons: [], peak: 0, qs: {} });
     });
     QUESTIONS.forEach(function (q) {
       if (q.type === "text") return;
+      var qw = qWeight(q);
       selected(q).forEach(function (v) {
         var o = optOf(q, v);
         if (!o) return;
         res.forEach(function (r) {
           var w = o.w[r.c.id] || 0;
-          r.score += w;
-          if (w > r.peak) r.peak = w;
-          if (w >= 2 && o.because) r.reasons.push({ w: w, text: o.because });
+          if (!w) return;
+          r.raw += w * qw;
+          if (w > 0) r.qs[q.id] = 1;
+          if (w * qw > r.peak) r.peak = w * qw;
+          if (w >= 2 && o.because) r.reasons.push({ w: w * qw, text: o.because });
         });
       });
+    });
+    res.forEach(function (r) {
+      r.coverage = Math.max(r.raw, 0) / maxFit(r.c.id);
+      r.fit = r.raw + r.coverage * FIT_COVERAGE + Object.keys(r.qs).length * FIT_BREADTH;
+      r.score = Math.round(r.fit * 10) / 10;  // 화면 표시용 (소수점 한 자리)
     });
     res.sort(compare);
 
@@ -150,7 +178,7 @@
     var other = res.filter(function (r) { return r.c.cat !== first.c.cat; })[0];
     var picked = [first];
     if (other) picked.push(other);
-    var third = res.filter(function (r) { return picked.indexOf(r) === -1 && r.score > 0; })[0];
+    var third = res.filter(function (r) { return picked.indexOf(r) === -1 && r.raw > 0; })[0];
     if (third) picked.push(third);
     var natural = res.slice(0, 3);
     if (other && natural.indexOf(other) === -1) other.forced = true;
@@ -166,9 +194,9 @@
       r.shownReasons = fresh;
     });
 
-    var more = res.filter(function (r) { return picked.indexOf(r) === -1 && r.score > 0; }).slice(0, 3);
+    var more = res.filter(function (r) { return picked.indexOf(r) === -1 && r.raw > 0; }).slice(0, 3);
     var tie = picked.length > 1 && picked[0].score === picked[1].score;
-    return { shown: picked, more: more, tie: tie, max: Math.max(first.score, 1) };
+    return { shown: picked, more: more, tie: tie, max: Math.max(picked[0].fit, 1) };
   }
   function reasonText(r) {
     if (!r.shownReasons.length) return ALT_REASON;
@@ -247,6 +275,14 @@
       'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">' + ICONS[name] + '</svg>';
   }
   var PAGE_SHORT = { 1: "학력", 2: "경험", 3: "관심", 4: "가치", 5: "계획", 6: "메모" };
+  var PAGE_DESC = {
+    1: "학력과 전공은 지원할 수 있는 진로의 기본 조건이 돼요.",
+    2: "복무 중 한 일과 가진 자격은 이력서에서 가장 먼저 보는 경력이에요.",
+    3: "관심 있는 분야를 고르면 추천에서 가장 크게 반영돼요.",
+    4: "무엇을 중요하게 여기는지에 따라 잘 맞는 일터가 달라져요.",
+    5: "학업·지역·준비 상황에 맞춰 후보를 거르고 할 일 계획을 짜요.",
+    6: "적은 내용은 결과표에 그대로 들어가 면담 때 이야기 거리가 돼요."
+  };
 
   /* ---------- 화면: 시작 ---------- */
   function renderStart() {
@@ -313,7 +349,7 @@
     var numbered = QUESTIONS.filter(function (q) { return q.type !== "text"; });
     var html = '<div class="quiz-head">' + stepper(p) +
       '<h1 class="page-title focus-target" tabindex="-1"><span class="page-count">' + p + ' / ' + LAST_PAGE + ' 단계</span>' +
-      esc(PAGE_TITLES[p]) + '</h1></div>' + errorBox();
+      esc(PAGE_TITLES[p]) + '</h1><p class="page-desc">' + PAGE_DESC[p] + '</p></div>' + errorBox();
 
     if (p < LAST_PAGE) {
       QUESTIONS.filter(function (q) { return q.page === p; }).forEach(function (q) {
@@ -371,8 +407,9 @@
       '<button type="button" data-act="print">' + icon("printer") + '인쇄 / PDF 저장</button></div>';
 
     // 문서 머리말: 제목 + 기본 정보 표
-    html += '<section class="doc-head"><span class="doc-kicker">면담 준비 자료</span>' +
+    html += '<section class="doc-head"><div class="doc-band"><span class="doc-kicker">면담 준비 자료</span>' +
       '<h1 tabindex="-1" class="focus-target">전역 후 진로 방향 정리</h1>' +
+      '<p class="doc-lead">답변을 바탕으로 볼 때 가장 잘 맞는 방향은 <b>' + esc(best.name) + '</b> 쪽이에요.</p></div>' +
       '<dl class="doc-meta">' +
       '<div><dt>구분</dt><dd>' + roleLabel + '</dd></div>' +
       '<div><dt>작성일</dt><dd>' + fmtFull(todayStart()) + '</dd></div>' +
@@ -420,7 +457,8 @@
         '<span class="rank-badge">' + (i + 1) + '순위</span>' +
         '<div class="cand-title"><h3>' + esc(r.c.name) + '</h3><div class="tags"><span class="tag">' + esc(r.c.cat) + '</span>' +
         (r.forced ? '<span class="tag alt">다른 분야 대안</span>' : '') + '</div></div>' +
-        '<span class="score">점수 <b>' + r.score + '</b></span></div>' +
+        '<span class="score"><span class="score-label">적합 점수</span><b>' + r.score.toFixed(1) + '</b>' +
+        '<span class="score-rel">' + (i === 0 ? "가장 높음" : "1순위의 " + Math.round(r.fit / sc.max * 100) + "%") + '</span></span></div>' +
         '<div class="meter" aria-hidden="true"><span style="width:' + pct + '%"></span></div>' +
         '<p class="desc">' + esc(r.c.desc) + '</p>' +
         (r.forced ? '<p class="alt-note">1순위와 다른 분야 중에서 가장 가까운 후보예요.</p>' : '') +
